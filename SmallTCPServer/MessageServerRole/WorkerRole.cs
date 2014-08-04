@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace MessageServerRole
@@ -57,14 +58,13 @@ namespace MessageServerRole
             var input = string.Empty;
             while (input != "9")
             {
-                writer.WriteLineAsync("...");
-
-                input = reader.ReadLine();
-                writer.WriteLine();
-
+                Thread.Sleep(10);
+                writer.WriteLineAsync("Say something... 9 to stop");
+                var readAsyncResult = reader.ReadLineAsync();
+                input = readAsyncResult.Result;
                 writer.WriteLineAsync(string.Format("Received: {0}", input));
-                writer.WriteLine();
             }
+
             stream.Close();
             reader.Close();
             writer.Close();
