@@ -7,7 +7,7 @@
       <Import moduleName="RemoteForwarder" />
     </Imports>
     <Endpoints>
-      <InputEndpoint name="DefaultEndpoint" protocol="tcp" port="8001" localPort="15000" />
+      <InputEndpoint name="DefaultEndpoint" protocol="tcp" port="8002" />
     </Endpoints>
   </WorkerRole>
 </ServiceDefinition>

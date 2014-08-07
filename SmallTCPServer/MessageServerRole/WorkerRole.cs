@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace MessageServerRole
@@ -21,12 +20,13 @@ namespace MessageServerRole
 
             try
             {
-                listener = new TcpListener(RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DefaultEndpoint"].IPEndpoint.Address, 
-                    RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DefaultEndpoint"].IPEndpoint.Port)
+                var ipAddress = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DefaultEndpoint"].IPEndpoint.Address;
+                var port = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DefaultEndpoint"].IPEndpoint.Port;
+                listener = new TcpListener(ipAddress, port)
                 {
                     ExclusiveAddressUse = false
                 };
-                listener.Start();
+                listener.Start(); // start listening. 
 
             }
             catch (Exception ex)
@@ -47,22 +47,30 @@ namespace MessageServerRole
             var listener = (TcpListener) ar.AsyncState;
             var client = listener.EndAcceptTcpClient(ar);
             _connectionWaitHandle.Set();
-
+            var buffer = new byte[1024];
             var clientGuid = Guid.NewGuid();
             Trace.WriteLine(string.Format("Accepted connection with ID {0}", clientGuid));
-
+            
             var stream = client.GetStream();
+
             var reader = new StreamReader(stream);
-            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var writer = new StreamWriter(stream) {AutoFlush = true};
+
 
             var input = string.Empty;
+            writer.WriteLine("Say something and I'll send it back to you, 9 to disconnect.");
             while (input != "9")
             {
-                Thread.Sleep(10);
-                writer.WriteLineAsync("Say something... 9 to stop");
-                var readAsyncResult = reader.ReadLineAsync();
-                input = readAsyncResult.Result;
-                writer.WriteLineAsync(string.Format("Received: {0}", input));
+                try
+                {
+                    input = reader.ReadLine();
+                    writer.WriteLine("Received: {0}", input);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex.Message);
+                    throw;
+                }
             }
 
             stream.Close();
